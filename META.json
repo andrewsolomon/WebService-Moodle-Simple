@@ -36,6 +36,7 @@
       },
       "runtime" : {
          "requires" : {
+            "Data::Dumper" : "0",
             "perl" : "5.008005"
          }
       },
@@ -57,7 +58,7 @@
          "web" : "https://github.com/andrewsolomon/WebService-Moodle-Simple"
       }
    },
-   "version" : "0.01",
+   "version" : "0.02",
    "x_contributors" : [
       "Andrew Solomon <andrew@illywhacker.net>"
    ]
