@@ -1,5 +1,5 @@
 {
-   "abstract" : "Blah blah blah",
+   "abstract" : "Client API and CLI for Moodle Web Services",
    "author" : [
       "Andrew Solomon <andrew@geekuni.com>"
    ],
