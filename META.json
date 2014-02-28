@@ -46,6 +46,17 @@
       }
    },
    "release_status" : "stable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/andrewsolomon/WebService-Moodle-Simple/issues"
+      },
+      "homepage" : "https://github.com/andrewsolomon/WebService-Moodle-Simple",
+      "repository" : {
+         "type" : "git",
+         "url" : "https://github.com/andrewsolomon/WebService-Moodle-Simple.git",
+         "web" : "https://github.com/andrewsolomon/WebService-Moodle-Simple"
+      }
+   },
    "version" : "0.01",
    "x_contributors" : [
       "Andrew Solomon <andrew@illywhacker.net>"
