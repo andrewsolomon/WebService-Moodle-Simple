@@ -160,7 +160,7 @@ sub set_password {
     'wstoken'                      => $args{token},
     'wsfunction'                   => "core_user_update_users",
     'moodlewsrestformat'           => $REST_FORMAT,
-    'users[0][id]'                 => $self->get_user(token => $args{token},, username => $username )->{id},
+    'users[0][id]'                 => $self->get_user(token => $args{token}, username => $username )->{id},
     'users[0][password]'           => $args{password},
   };
 
@@ -345,6 +345,47 @@ sub get_user {
     ouch 'MSE-0003', "failed to find user '$args{username}'";
   }
   return $user;
+}
+
+=head2 raw_api
+
+A generic function which takes
+
+  (
+    method => <moodle method name>,
+    token => <token>,
+    params => {<hash method parameters>}
+  )
+
+and returns Moodle's response.
+
+=cut
+
+sub raw_api {
+  my $self = shift;
+  my %args = (
+    token    => undef,
+    method   => undef,
+    params   => {},
+    @_
+  );
+
+  my $params = {
+    'wstoken'                      => $args{token},
+    'wsfunction'                   => $args{method},
+    'moodlewsrestformat'           => $REST_FORMAT,
+    %{$args{params}}
+  };
+
+
+  my $dns_uri = $self->dns_uri;
+  $dns_uri->path('webservice/rest/server.php');
+  $dns_uri->query_form( $params );
+
+  my $res = $self->rest_call($dns_uri);
+
+  return if $res->content eq 'null';
+  return from_json($res->content);
 }
 
 
