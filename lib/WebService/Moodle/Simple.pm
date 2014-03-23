@@ -210,7 +210,7 @@ sub add_user {
 
   my $res = $self->rest_call($dns_uri);
 
-  return from_json($res->content);
+  return from_json($res->content)->[0];
 }
 
 sub get_users {
