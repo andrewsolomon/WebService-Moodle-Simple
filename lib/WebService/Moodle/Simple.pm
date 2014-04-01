@@ -347,19 +347,39 @@ sub get_user {
   return $user;
 }
 
-=head2 raw_api
+# WARNING: suspend_user depends on
+# https://github.com/fabiomsouto/moodle/compare/MOODLE_22_STABLE...MDL-31465-MOODLE_22_STABLE
 
-A generic function which takes
+sub suspend_user {
+  my $self = shift;
+  my %args = (
+    token    => undef,
+    username => undef,
+    suspend  => 1, # suspend unless it is 0
+    @_
+  );
 
-  (
-    method => <moodle method name>,
-    token => <token>,
-    params => {<hash method parameters>}
-  )
+  my $mdl_user = $self->get_user( username => $args{username}, token => $args{token});
 
-and returns Moodle's response.
+  my $params = {
+    'wstoken'                      => $args{token},
+    'wsfunction'                   => "core_user_update_users",
+    'moodlewsrestformat'           => $REST_FORMAT,
+    'users[0][id]'                 => $mdl_user->{id},
+    'users[0][suspended]'          => $args{suspend} + 0,
+  };
 
-=cut
+
+  my $dns_uri = $self->dns_uri;
+  $dns_uri->path('webservice/rest/server.php');
+  $dns_uri->query_form( $params );
+
+  my $res = $self->rest_call($dns_uri);
+
+  return $res->content;
+
+}
+
 
 sub raw_api {
   my $self = shift;
@@ -457,6 +477,31 @@ Retrieve the user list using the token returned from the login command
 
 __NOTE: Full unit tests write to Moodle Database - only run then against a test Moodle server__.
 
+=head2 Methods
+
+=over 4
+
+=item I<$OBJ>->suspend_user(
+  token    => I<str>,
+  username => I<str>,
+  suspend  => I<bool default TRUE>
+)
+
+If suspend is true/nonzero (which is the default) it kills the users's session
+and suspends their account preventing them from logging in. If suspend is false
+they are given permission to login. NOTE: This will only work if the Moodle
+server has had this patch (or its equivalent) applied:
+https://github.com/fabiomsouto/moodle/compare/MOODLE_22_STABLE...MDL-31465-MOODLE_22_STABLE
+
+=item I<$OBJ>->raw_api(
+    method => I<moodle webservice method name>,
+    token  => I<str>,
+    params => I<hashref of method parameters>
+)
+
+returns Moodle's response.
+
+=back
 
 =head1 AUTHOR
 

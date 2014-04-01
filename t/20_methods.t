@@ -56,6 +56,39 @@ ok($login->{ok}, 'login succeeds');
 
 }
 
+{
+  sleep(1);
+  my $timestamp = time();
+  my $username = 'test_'.$timestamp;
+  note 'testing raw api';
+  $moodle->add_user(
+    firstname => 'Test',
+    lastname  => 'User',
+    email     => $username.'@example.com',
+    username  => $username,
+    token     => $login->{token},
+    password  => 'test_pwd',
+  );
+
+
+  my $suspension = $moodle->suspend_user(
+    token => $login->{token},
+    username  => $username
+  );
+
+  my $ra_users = $moodle->get_users(token => $login->{token});
+
+  my @test_user = grep { $_->{username} eq $username } @$ra_users;
+
+  is ($test_user[0]->{email}, $username.'@example.com', $username.'@example.com exists');
+
+  ok($test_user[0]->{suspended}, 'the user is suspended as expected');
+
+  note 'userid = '.$test_user[0]->{id};
+
+
+}
+
 
 done_testing();
 
