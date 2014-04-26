@@ -12,7 +12,7 @@ use Sys::SigAction qw( timeout_call );
 use JSON;
 use Ouch;
 use List::Util qw/first/;
-use feature 'say';
+#use feature 'say';
 
 my $REST_FORMAT = 'json';
 
@@ -28,7 +28,7 @@ has port => (
 
 has timeout => (
   is      => 'rw',
-  default => 12,
+  default => 1000,
 );
 
 has target => (
@@ -101,11 +101,11 @@ sub login  {
     @_
   );
 
-say '=====================================';
-use Data::Dumper;
-say Dumper \%args;
-say Dumper $self;
-say '=====================================';
+#say '=====================================';
+#use Data::Dumper;
+#say Dumper \%args;
+#say Dumper $self;
+#say '=====================================';
 
   my $username = $args{username};
   my $password = $args{password};
@@ -190,7 +190,7 @@ sub add_user {
   my $username = lc($args{username});
 
 
-  say "Attempting to create user account '$username'";
+  #say "Attempting to create user account '$username'";
 
   my $params = {
     'wstoken'                      => $args{token},
@@ -294,9 +294,9 @@ sub get_course_id {
   my $res = $self->rest_call($dns_uri);
   my $ra_courses = from_json($res->content);
     foreach my $rh_course (@$ra_courses) {
-say '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%';
-use Data::Dumper;
-say Dumper $rh_course;
+#say '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%';
+#use Data::Dumper;
+#say Dumper $rh_course;
       if ($rh_course->{shortname} eq $args{short_cname}) {
         return $rh_course->{id};
       }
@@ -324,9 +324,9 @@ sub get_student_role {
   my $res = $self->rest_call($dns_uri);
   my $ra_roles = from_json($res->content);
 
-say '=====================================================';
-use Data::Dumper;
-say Dumper $ra_roles;
+#say '=====================================================';
+#use Data::Dumper;
+#say Dumper $ra_roles;
 
   my $rh_student_role = first { $_->{shortname} eq 'student' } @$ra_roles;
   return $rh_student_role;
