@@ -3,8 +3,6 @@ package WebService::Moodle::Simple::CLI;
 use strict;
 use warnings;
 use OptArgs;
-use Data::Dumper;
-use feature 'say';
 
 opt help => (
     isa     => 'Bool',
@@ -12,8 +10,6 @@ opt help => (
     ishelp  => 1,
 );
 
-
-## NOTE: This is the magic I didn't realise is necessary at the first attempt!
 
 arg command => (
   isa     => 'SubCmd',

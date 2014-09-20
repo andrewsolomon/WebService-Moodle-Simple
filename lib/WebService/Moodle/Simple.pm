@@ -12,7 +12,6 @@ use Sys::SigAction qw( timeout_call );
 use JSON;
 use Ouch;
 use List::Util qw/first/;
-#use feature 'say';
 
 my $REST_FORMAT = 'json';
 
@@ -101,12 +100,6 @@ sub login  {
     @_
   );
 
-#say '=====================================';
-#use Data::Dumper;
-#say Dumper \%args;
-#say Dumper $self;
-#say '=====================================';
-
   my $username = $args{username};
   my $password = $args{password};
   my $target = $self->target;
@@ -188,9 +181,6 @@ sub add_user {
 
 
   my $username = lc($args{username});
-
-
-  #say "Attempting to create user account '$username'";
 
   my $params = {
     'wstoken'                      => $args{token},
@@ -294,9 +284,6 @@ sub get_course_id {
   my $res = $self->rest_call($dns_uri);
   my $ra_courses = from_json($res->content);
     foreach my $rh_course (@$ra_courses) {
-#say '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%';
-#use Data::Dumper;
-#say Dumper $rh_course;
       if ($rh_course->{shortname} eq $args{short_cname}) {
         return $rh_course->{id};
       }
@@ -323,10 +310,6 @@ sub get_student_role {
 
   my $res = $self->rest_call($dns_uri);
   my $ra_roles = from_json($res->content);
-
-#say '=====================================================';
-#use Data::Dumper;
-#say Dumper $ra_roles;
 
   my $rh_student_role = first { $_->{shortname} eq 'student' } @$ra_roles;
   return $rh_student_role;
@@ -435,11 +418,11 @@ WebService::Moodle::Simple - Client API and CLI for Moodle Web Services
   use WebService::Moodle::Simple;
 
   my $moodle = WebService::Moodle::Simple->new(
-    domain   =>  moodle.example.edu,
-    target   =>  example_webservice
+    domain   =>  'moodle.example.edu',
+    target   =>  'example_webservice'
   );
 
-  my $rh_token = $moodle->login( username => 'admin', password => 'foobar');
+  my $rh_token = $moodle->login( username => 'admin', password => 'p4ssw0rd');
 
 
 =head1 DESCRIPTION
@@ -459,11 +442,11 @@ Get instructions on CLI usage
 
 =head2 Example - Login and Get Users
 
-  moodlews login -u admin -d moodle.example.edu -p foobar -t example_webservice
+  moodlews login -u admin -d moodle.example.edu -p p4ssw0rd -t example_webservice
 
 Retrieve the user list using the token returned from the login command
 
-  moodlews get_users -o dnur823r -d moodle.example.edu -t example_webservice
+  moodlews get_users -o becac8d120119eb2a312a385644eb709 -d moodle.example.edu -t example_webservice
 
 =head2 Unit Tests
 
@@ -471,29 +454,90 @@ Retrieve the user list using the token returned from the login command
 
 =head3 Full Unit Tests
 
-  TEST_WSMS_ADMIN_PWD=foobar \
+  TEST_WSMS_ADMIN_PWD=p4ssw0rd \
   TEST_WSMS_DOMAIN=moodle.example.edu \
   TEST_WSMS_TARGET=example_webservice prove -rlv t
 
-__NOTE: Full unit tests write to Moodle Database - only run then against a test Moodle server__.
+__NOTE: Full unit tests write to Moodle Database - only run them against a test Moodle server__.
 
 =head2 Methods
 
 =over 4
 
-=item I<$OBJ>->suspend_user(
+=item *
+
+I<$OBJ>->login(
+  username => I<str>,
+  password => I<str>,
+)
+
+Returns { msg => I<str>, ok => I<bool>, token => I<str> }
+
+=item *
+
+I<$OBJ>->set_password(
+  username => I<str>,
+  password => I<str>,
+  token    => I<str>,
+)
+
+=item *
+
+I<$OBJ>->add_user(
+  firstname => I<str>,
+  lastname  => I<str>,
+  email     => I<str>,
+  username  => I<str>,
+  password  => I<str>,
+  token     => I<str>,
+)
+
+=item *
+
+I<$OBJ>->get_users(
+  token     => I<str>,
+)
+
+
+=item *
+
+I<$OBJ>->enrol_student(
+  username  => I<str>,
+  course    => I<str>,
+  token     => I<str>,
+)
+
+=item *
+
+I<$OBJ>->get_course_id(
+  short_cname  => I<str>,
+  token        => I<str>,
+)
+
+=item *
+
+I<$OBJ>->get_user(
+  token        => I<str>,
+  username     => I<str>,
+)
+
+=item *
+
+I<$OBJ>->suspend_user(
   token    => I<str>,
   username => I<str>,
   suspend  => I<bool default TRUE>
 )
 
-If suspend is true/nonzero (which is the default) it kills the users's session
+If suspend is true/nonzero (which is the default) it kills the user's session
 and suspends their account preventing them from logging in. If suspend is false
 they are given permission to login. NOTE: This will only work if the Moodle
 server has had this patch (or its equivalent) applied:
 https://github.com/fabiomsouto/moodle/compare/MOODLE_22_STABLE...MDL-31465-MOODLE_22_STABLE
 
-=item I<$OBJ>->raw_api(
+=item *
+
+I<$OBJ>->raw_api(
     method => I<moodle webservice method name>,
     token  => I<str>,
     params => I<hashref of method parameters>

@@ -9,8 +9,6 @@ use WebService::Moodle::Simple;
 
 sub run {
   my $opts = shift;
-  say "Adding a user !";
-  say Dumper $opts;
 
   my $moodle = WebService::Moodle::Simple->new( %$opts );
 
