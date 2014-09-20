@@ -2,6 +2,10 @@ Revision history for WebService-Moodle-Simple
 
 {{$NEXT}}
 
+0.04  2014-09-20 23:14:15 UTC
+        - More documentation
+        - add suspend_user
+
 0.03  2014-02-28 18:23:22 UTC
         - Add documentation
 

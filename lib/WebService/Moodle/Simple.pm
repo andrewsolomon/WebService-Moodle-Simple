@@ -1,7 +1,7 @@
 package WebService::Moodle::Simple;
 
 use 5.008_005;
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 use Moo;
 use namespace::clean;
