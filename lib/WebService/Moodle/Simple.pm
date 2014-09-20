@@ -555,6 +555,10 @@ Andrew Solomon E<lt>andrew@geekuni.comE<gt>
 
 Copyright 2014- Andrew Solomon
 
+=head1 ACKNOWLEDGEMENT
+
+Built by Dist::Milla
+
 =head1 LICENSE
 
 This library is free software; you can redistribute it and/or modify
