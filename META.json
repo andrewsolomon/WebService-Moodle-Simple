@@ -26,7 +26,7 @@
    "prereqs" : {
       "configure" : {
          "requires" : {
-            "Module::Build::Tiny" : "0.034"
+            "Module::Build::Tiny" : "0.039"
          }
       },
       "develop" : {
@@ -68,7 +68,7 @@
          "web" : "https://github.com/andrewsolomon/WebService-Moodle-Simple"
       }
    },
-   "version" : "0.04",
+   "version" : "0.05",
    "x_contributors" : [
       "Andrew Solomon <andrew@illywhacker.net>"
    ]
