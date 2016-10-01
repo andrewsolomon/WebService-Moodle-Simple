@@ -1,7 +1,7 @@
 package WebService::Moodle::Simple;
 
 use 5.008_005;
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 use Moo;
 use namespace::clean;
@@ -14,6 +14,8 @@ use Ouch;
 use List::Util qw/first/;
 
 my $REST_FORMAT = 'json';
+# https://moodle.org/mod/forum/discuss.php?d=340377
+my $STUDENT_ROLE_ID = 5;
 
 # the base domain like moodle.example.com
 has domain => (
@@ -124,7 +126,8 @@ sub login  {
       ok => 1,
     };
   }
-  elsif ($token->{error} =~ m/username was not found/) {
+  elsif ($token->{error}) {
+    # a bit of a guess as to why, but the message has changed across Moodle verions
     return {
       msg => "'$username' does not exist, or did not enter the correct password",
       ok  => 0,
@@ -203,18 +206,23 @@ sub add_user {
   return from_json($res->content)->[0];
 }
 
-sub get_users {
+sub get_user {
   my $self = shift;
   my %args = (
+    username  => undef,
     token     => undef,
     @_
   );
 
 
+  my $username = lc($args{username});
+
   my $params = {
     'wstoken'                      => $args{token},
-    'wsfunction'                   => "core_user_get_all_users",
+    'wsfunction'                   => "core_user_get_users_by_field",
     'moodlewsrestformat'           => $REST_FORMAT,
+    'field'                        => 'username',
+    'values[0]'                    => $username,
   };
 
 
@@ -224,7 +232,38 @@ sub get_users {
 
   my $res = $self->rest_call($dns_uri);
 
-  return from_json($res->content);
+  my $dat = from_json($res->content);
+  unless ($dat && ref($dat) eq 'ARRAY' && scalar(@$dat)) {
+    return;
+  }
+  return $dat->[0];
+}
+
+
+sub get_users {
+  my $self = shift;
+  my %args = (
+    token     => undef,
+    @_
+  );
+
+  my $params = {
+    'wstoken'                      => $args{token},
+    'wsfunction'                   => "core_user_get_users",
+    'moodlewsrestformat'           => $REST_FORMAT,
+    'criteria[0][key]'             => 'dummyparam',
+    'criteria[0][value]'           => '',
+  };
+
+
+  my $dns_uri = $self->dns_uri;
+  $dns_uri->path('webservice/rest/server.php');
+  $dns_uri->query_form( $params );
+
+  my $res = $self->rest_call($dns_uri);
+
+  my $rh_res = from_json($res->content);
+  return $rh_res->{users};
 }
 
 sub enrol_student {
@@ -242,13 +281,11 @@ sub enrol_student {
   )->{id};
   
 
-
-  my $sturole = $self->get_student_role( token => $args{token} );
   my $params = {
     'wstoken'                      => $args{token},
     'wsfunction'                   => "enrol_manual_enrol_users",
     'moodlewsrestformat'           => $REST_FORMAT,
-    'enrolments[0][roleid]'        => $sturole->{id},
+    'enrolments[0][roleid]'        => $STUDENT_ROLE_ID,
     'enrolments[0][userid]'        => $user_id,
     'enrolments[0][courseid]'      => $self->get_course_id (  token => $args{token}, short_cname => $args{course} ),
   };
@@ -293,6 +330,8 @@ sub get_course_id {
   ouch 'MSE-0002', 'failed to find course of name '.$args{short_cname};
 }
 
+# DEPRECATED: this depends on core_role_get_all_roles which isn't in the
+# core Moodle distribution.
 sub get_student_role {
   my $self = shift;
   my %args = (
@@ -315,23 +354,9 @@ sub get_student_role {
   return $rh_student_role;
 }
 
-sub get_user {
-  my $self = shift;
-  my %args = (
-    token    => undef,
-    username => undef,
-    @_
-  );
-  my $ra_users = $self->get_users( token => $args{token} );
-  my $user = first { $_->{username} eq $args{username} } @$ra_users;
-  unless ($user) {
-    ouch 'MSE-0003', "failed to find user '$args{username}'";
-  }
-  return $user;
-}
 
-# WARNING: suspend_user depends on
-# https://github.com/fabiomsouto/moodle/compare/MOODLE_22_STABLE...MDL-31465-MOODLE_22_STABLE
+# WARNING: suspend_user depends on the 'suspended' parameter
+# https://tracker.moodle.org/browse/MDL-31465
 
 sub suspend_user {
   my $self = shift;
@@ -360,7 +385,6 @@ sub suspend_user {
   my $res = $self->rest_call($dns_uri);
 
   return $res->content;
-
 }
 
 
