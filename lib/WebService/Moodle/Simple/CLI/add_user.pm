@@ -2,7 +2,7 @@ package WebService::Moodle::Simple::CLI::add_user;
 
 use strict;
 use warnings;
-use Data::Dumper;
+use Data::Dump 'pp';
 use feature 'say';
 use WebService::Moodle::Simple;
 
@@ -18,10 +18,9 @@ sub run {
     email     => $opts->{email},
     password  => $opts->{password},
     username  => $opts->{username},
-    token     => $opts->{token},
   );
 
-  say Dumper $resp;
+  say pp($resp);
 
 }
 

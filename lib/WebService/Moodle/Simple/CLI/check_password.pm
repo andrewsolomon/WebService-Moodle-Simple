@@ -1,4 +1,4 @@
-package WebService::Moodle::Simple::CLI::enrol;
+package WebService::Moodle::Simple::CLI::check_password;
 
 use strict;
 use warnings;
@@ -11,9 +11,9 @@ sub run {
   my $opts = shift;
   my $moodle = WebService::Moodle::Simple->new( %$opts );
 
-  my $resp = $moodle->enrol_student(
+  my $resp = $moodle->check_password(
+    password  => $opts->{password},
     username  => $opts->{username},
-    course   => $opts->{course},
   );
 
   say pp($resp);

@@ -38,33 +38,17 @@ opt target => (
   isa     => 'Str',
   alias   => 't',
   comment => '--target [-t] - The name of the target Moodle service to access',
-  default => sub { die '--target [-t] - name of the target moodle service is required' },
 );
 
+opt token => (
+  isa      => 'Str',
+  alias    => 'o',
+  comment  => '--token [-o] - token (required)',
+);
 
 opt scheme => (
   isa     => 'Str',
-  comment => '--scheme - The uri scheme - defaults to "http"',
-);
-
-
-subcmd (
-  cmd     => 'login',
-  comment => 'Check password and retrieve token',
-);
-
-opt username => (
-  isa     => 'Str',
-  alias   => 'u',
-  comment => '--username [-u] - The Moodle username accessing the service',
-  default => sub { die '--username [-u] - username is required' },
-);
-
-opt password => (
-  isa      => 'Str',
-  alias    => 'p',
-  comment  => '--password [-p] - user password',
-  default => sub { die '--password [-p] - user password is required' },
+  comment => '--scheme - The uri scheme - defaults to "https"',
 );
 
 subcmd (
@@ -100,30 +84,12 @@ opt email => (
   default => sub { die '--email [-e] - email required' },
 );
 
-opt token => (
-  isa      => 'Str',
-  alias    => 'o',
-  comment  => '--token [-o] - user token (required)',
-  default => sub { die '--token [-o] - token required' },
-);
 
 opt password => (
   isa      => 'Str',
   alias    => 'p',
   comment  => '--password [-p] - user password (required)',
   default => sub { die '--password [-p] - user password required' },
-);
-  
-subcmd (
-  cmd     => 'get_users',
-  comment => 'Get all users',
-);
-
-opt token => (
-  isa      => 'Str',
-  alias    => 'o',
-  comment  => '--token [-o] - token (required)',
-  default => sub { die '--token [-o] - token required' },
 );
 
 subcmd (
@@ -140,16 +106,11 @@ opt username => (
 
 opt course => (
   isa     => 'Str',
-  comment => '--course - The Moodle course being enrolled in',
+  alias   => 'c',
+  comment => '--course [-c] - The Moodle course being enrolled in',
   default => sub { die '--course required' },
 );
 
-opt token => (
-  isa      => 'Str',
-  alias    => 'o',
-  comment  => '--token [-o] - token (required)',
-  default => sub { die '--token [-o] - token required' },
-);
 
 subcmd (
   cmd     => 'set_password',
@@ -170,12 +131,42 @@ opt password => (
   default => sub { die '--password [-p] - password required' },
 );
 
-opt token => (
-  isa      => 'Str',
-  alias    => 'o',
-  comment  => '--token [-o] - user token',
-  default => sub { die '--token [-o] - token required' },
+subcmd (
+  cmd     => 'suspend',
+  comment => 'Suspend a user account',
 );
-  
+
+opt username => (
+  isa     => 'Str',
+  alias   => 'u',
+  comment => '--username [-u] - username of account to be suspended',
+  default => sub { die '--username [-u] - username required' },
+);
+
+opt undo => (
+    isa     => 'Bool',
+    comment => '--undo un-suspend a user',
+    default => 0,
+);
+
+subcmd (
+    cmd => 'check_password',
+    comment => 'Check that the username/password is a correct combination',
+);
+
+opt username => (
+  isa     => 'Str',
+  alias   => 'u',
+  comment => '--username [-u] - the user of the password',
+  default => sub { die '--username [-u] - username required' },
+);
+
+opt password => (
+  isa      => 'Str',
+  alias    => 'p',
+  comment  => '--password [-p] - user password',
+  default => sub { die '--password [-p] - password required' },
+);
+
 
 1;

@@ -1,22 +1,22 @@
-package WebService::Moodle::Simple::CLI::login;
+package WebService::Moodle::Simple::CLI::suspend;
 
 use strict;
 use warnings;
+use Data::Dump 'pp';
 use feature 'say';
-use Data::Dumper;
 use WebService::Moodle::Simple;
- 
+
+
 sub run {
   my $opts = shift;
-
   my $moodle = WebService::Moodle::Simple->new( %$opts );
 
-  my $resp = $moodle->login(
+  my $resp = $moodle->suspend_user(
     username  => $opts->{username},
-    password  => $opts->{password},
+    suspend   => $opts->{undo} ? 0 : 1,
   );
 
-  say Dumper $resp;
+  say pp($resp);
 
 }
 

@@ -22,25 +22,31 @@ has domain => (
   is => 'ro',
 );
 
+# name of the moodle external service
+has target => (
+  is      => 'ro',
+);
+
+has token => (
+  is      => 'ro',
+);
+
 has port => (
-  is      => 'rw',
-  default => 80,
+  is      => 'ro',
+  default => 443,
 );
 
 has timeout => (
-  is      => 'rw',
+  is      => 'ro',
   default => 1000,
 );
 
-has target => (
-  is      => 'rw',
-);
-
-
 has scheme => (
   is      => 'rw',
-  default => 'http',
+  default => 'https',
 );
+
+
 
 sub dns_uri {
   my $self = shift;
@@ -50,9 +56,9 @@ sub dns_uri {
 sub rest_call {
   my ($self, $dns_uri) = @_;
 
-  my $res;
-
   my $timeout = $self->timeout + 1;
+
+  my $res;
 
   if (timeout_call( $timeout,
     sub {
@@ -73,78 +79,12 @@ sub rest_call {
   return $res;
 }
 
-sub token {
-  my $self = shift;
-  my %args = (
-    username => undef,
-    password => undef,
-    @_
-  );
-
-  my $dns_uri = $self->dns_uri;
-  $dns_uri->path('login/token.php');
-  $dns_uri->query_form( {
-    username => $args{username},
-    password => $args{password},
-    service  => $self->target,
-  });
-
-  my $res = $self->rest_call($dns_uri);
-
-  return from_json($res->content);
-}
-
-sub login  {
-  my $self = shift;
-  my %args = (
-    username => undef,
-    password => undef,
-    @_
-  );
-
-  my $username = $args{username};
-  my $password = $args{password};
-  my $target = $self->target;
-
-  my $token = $self->token(
-    username  => $username,
-    password  => $password,
-  );
-
-
-
-  if (defined($token->{token})) {
-    return {
-      msg => "'$username' has access to the '$target' web service",
-      ok  => 1,
-      token => $token->{token},
-    };
-  }
-  elsif ($token->{error} =~ m/No permission/) {
-    return {
-      msg => "'$username' has the correct password but no access to the '$target' web service",
-      ok => 1,
-    };
-  }
-  elsif ($token->{error}) {
-    # a bit of a guess as to why, but the message has changed across Moodle verions
-    return {
-      msg => "'$username' does not exist, or did not enter the correct password",
-      ok  => 0,
-    };
-  }
-  else {
-    ouch 'MSE:0001', "Service '$target': ".$token->{error}, $token;
-  }
-
-}
 
 sub set_password {
   my $self = shift;
   my %args = (
-    username  => undef,
+    username   => undef,
     password   => undef,
-    token     => undef,
     @_
   );
 
@@ -153,10 +93,10 @@ sub set_password {
 
 
   my $params = {
-    'wstoken'                      => $args{token},
+    'wstoken'                      => $self->token,
     'wsfunction'                   => "core_user_update_users",
     'moodlewsrestformat'           => $REST_FORMAT,
-    'users[0][id]'                 => $self->get_user(token => $args{token}, username => $username )->{id},
+    'users[0][id]'                 => $self->get_user(username => $username )->{id},
     'users[0][password]'           => $args{password},
   };
 
@@ -176,8 +116,7 @@ sub add_user {
     firstname => undef,
     lastname  => undef,
     email     => undef,
-    username  => undef,
-    token     => undef,
+    username   => undef,
     password  => undef,
     @_
   );
@@ -186,7 +125,7 @@ sub add_user {
   my $username = lc($args{username});
 
   my $params = {
-    'wstoken'                      => $args{token},
+    'wstoken'                      => $self->token,
     'wsfunction'                   => "core_user_create_users",
     'moodlewsrestformat'           => $REST_FORMAT,
     'users[0][username]'           => $username,
@@ -203,6 +142,7 @@ sub add_user {
 
   my $res = $self->rest_call($dns_uri);
 
+
   return from_json($res->content)->[0];
 }
 
@@ -210,7 +150,6 @@ sub get_user {
   my $self = shift;
   my %args = (
     username  => undef,
-    token     => undef,
     @_
   );
 
@@ -218,7 +157,7 @@ sub get_user {
   my $username = lc($args{username});
 
   my $params = {
-    'wstoken'                      => $args{token},
+    'wstoken'                      => $self->token,
     'wsfunction'                   => "core_user_get_users_by_field",
     'moodlewsrestformat'           => $REST_FORMAT,
     'field'                        => 'username',
@@ -232,6 +171,7 @@ sub get_user {
 
   my $res = $self->rest_call($dns_uri);
 
+
   my $dat = from_json($res->content);
   unless ($dat && ref($dat) eq 'ARRAY' && scalar(@$dat)) {
     return;
@@ -240,54 +180,27 @@ sub get_user {
 }
 
 
-sub get_users {
-  my $self = shift;
-  my %args = (
-    token     => undef,
-    @_
-  );
-
-  my $params = {
-    'wstoken'                      => $args{token},
-    'wsfunction'                   => "core_user_get_users",
-    'moodlewsrestformat'           => $REST_FORMAT,
-    'criteria[0][key]'             => 'dummyparam',
-    'criteria[0][value]'           => '',
-  };
-
-
-  my $dns_uri = $self->dns_uri;
-  $dns_uri->path('webservice/rest/server.php');
-  $dns_uri->query_form( $params );
-
-  my $res = $self->rest_call($dns_uri);
-
-  my $rh_res = from_json($res->content);
-  return $rh_res->{users};
-}
-
 sub enrol_student {
   my $self = shift;
   my %args = (
     username   => undef,
-    course => undef,
-    token      => undef,
+    course    => undef,
     @_
   );
 
-  my $user_id = $self->get_user(
-    token => $args{token},
+  my $user = $self->get_user(
     username => $args{username}
-  )->{id};
-  
+  );
+  return unless $user;
+  my $user_id = $user->{id};
 
   my $params = {
-    'wstoken'                      => $args{token},
+    'wstoken'                      => $self->token,
     'wsfunction'                   => "enrol_manual_enrol_users",
     'moodlewsrestformat'           => $REST_FORMAT,
     'enrolments[0][roleid]'        => $STUDENT_ROLE_ID,
     'enrolments[0][userid]'        => $user_id,
-    'enrolments[0][courseid]'      => $self->get_course_id (  token => $args{token}, short_cname => $args{course} ),
+    'enrolments[0][courseid]'      => $self->get_course_id (  short_cname => $args{course} ),
   };
 
 
@@ -306,15 +219,14 @@ sub get_course_id {
   my $self = shift;
   my %args = (
     short_cname => undef,
-    token       => undef,
     @_
   );
 
   my $dns_uri = $self->dns_uri;
   $dns_uri->path('webservice/rest/server.php');
   $dns_uri->query_form( {
-    wstoken   => $args{token},
-    wsfunction => 'core_course_get_courses',
+    wstoken            =>  $self->token,
+    wsfunction         => 'core_course_get_courses',
     moodlewsrestformat => $REST_FORMAT,
   } );
 
@@ -330,47 +242,22 @@ sub get_course_id {
   ouch 'MSE-0002', 'failed to find course of name '.$args{short_cname};
 }
 
-# DEPRECATED: this depends on core_role_get_all_roles which isn't in the
-# core Moodle distribution.
-sub get_student_role {
-  my $self = shift;
-  my %args = (
-    token       => undef,
-    @_
-  );
 
-  my $dns_uri = $self->dns_uri;
-  $dns_uri->path('webservice/rest/server.php');
-  $dns_uri->query_form( {
-    wstoken   => $args{token},
-    wsfunction => 'core_role_get_all_roles',
-    moodlewsrestformat => $REST_FORMAT,
-  } );
-
-  my $res = $self->rest_call($dns_uri);
-  my $ra_roles = from_json($res->content);
-
-  my $rh_student_role = first { $_->{shortname} eq 'student' } @$ra_roles;
-  return $rh_student_role;
-}
-
-
-# WARNING: suspend_user depends on the 'suspended' parameter
+# NOTE: suspend_user depends on the 'suspended' parameter
 # https://tracker.moodle.org/browse/MDL-31465
 
 sub suspend_user {
   my $self = shift;
   my %args = (
-    token    => undef,
-    username => undef,
+    username  => undef,
     suspend  => 1, # suspend unless it is 0
     @_
   );
 
-  my $mdl_user = $self->get_user( username => $args{username}, token => $args{token});
+  my $mdl_user = $self->get_user( username => $args{username} );
 
   my $params = {
-    'wstoken'                      => $args{token},
+    'wstoken'                      => $self->token,
     'wsfunction'                   => "core_user_update_users",
     'moodlewsrestformat'           => $REST_FORMAT,
     'users[0][id]'                 => $mdl_user->{id},
@@ -388,33 +275,56 @@ sub suspend_user {
 }
 
 
-sub raw_api {
+sub check_password  {
   my $self = shift;
   my %args = (
-    token    => undef,
-    method   => undef,
-    params   => {},
+    username => undef,
+    password => undef,
     @_
   );
 
+  my $username = $args{username};
+  my $password = $args{password};
+
   my $params = {
-    'wstoken'                      => $args{token},
-    'wsfunction'                   => $args{method},
-    'moodlewsrestformat'           => $REST_FORMAT,
-    %{$args{params}}
+    'username'   => $args{username},
+    'password'   => $args{password},
+    'service'    => 'moodle_mobile_app',
   };
 
 
   my $dns_uri = $self->dns_uri;
-  $dns_uri->path('webservice/rest/server.php');
+  $dns_uri->path('login/token.php');
   $dns_uri->query_form( $params );
 
   my $res = $self->rest_call($dns_uri);
 
-  return if $res->content eq 'null';
-  return from_json($res->content);
-}
+  my $content = $res->content;
 
+  my $data;
+  eval {
+    $data = from_json($res->content);
+  };
+  if ($@){
+    return {
+      msg => "'$username' login failed",
+      ok  => 0,
+    };
+  }
+
+  if ( $data->{token} ) {
+    return {
+      msg => "'$username' has the correct password",
+      ok  => 1,
+    };
+  }
+
+  return {
+    msg => "'$username' login failed, error code: ".$data->{errorcode},
+    ok  => 0,
+  };
+
+}
 
 1;
 __END__
@@ -430,7 +340,6 @@ WebService::Moodle::Simple - Client API and CLI for Moodle Web Services
 
 =head2 CLI
 
-  moodlews login        - login with your Moodle password and retrieve token
   moodlews add_user     - Create a Moodle user account
   moodlews get_users    - Get all users
   moodlews enrol        - Enrol user into a course
@@ -442,11 +351,14 @@ WebService::Moodle::Simple - Client API and CLI for Moodle Web Services
   use WebService::Moodle::Simple;
 
   my $moodle = WebService::Moodle::Simple->new(
-    domain   =>  'moodle.example.edu',
-    target   =>  'example_webservice'
+    domain   => 'moodle.example.edu',
+    port     => 80,                  # default 443
+    timeout  => 100,                 # default 1000
+    scheme   => 'http',              # default 'https'
+    target   => 'example_webservice'
+    token    => '0123456789abcdef',
   );
 
-  my $rh_token = $moodle->login( username => 'admin', password => 'p4ssw0rd');
 
 
 =head1 DESCRIPTION
@@ -466,9 +378,7 @@ Get instructions on CLI usage
 
 =head2 Example - Login and Get Users
 
-  moodlews login -u admin -d moodle.example.edu -p p4ssw0rd -t example_webservice
-
-Retrieve the user list using the token returned from the login command
+Retrieve the user list using the token
 
   moodlews get_users -o becac8d120119eb2a312a385644eb709 -d moodle.example.edu -t example_webservice
 
@@ -490,7 +400,7 @@ __NOTE: Full unit tests write to Moodle Database - only run them against a test 
 
 =item *
 
-I<$OBJ>->login(
+I<$OBJ>->check_password(
   username => I<str>,
   password => I<str>,
 )
@@ -548,16 +458,13 @@ I<$OBJ>->get_user(
 =item *
 
 I<$OBJ>->suspend_user(
-  token    => I<str>,
   username => I<str>,
   suspend  => I<bool default TRUE>
 )
 
 If suspend is true/nonzero (which is the default) it kills the user's session
 and suspends their account preventing them from logging in. If suspend is false
-they are given permission to login. NOTE: This will only work if the Moodle
-server has had this patch (or its equivalent) applied:
-https://github.com/fabiomsouto/moodle/compare/MOODLE_22_STABLE...MDL-31465-MOODLE_22_STABLE
+they are given permission to login.
 
 =item *
 
@@ -578,10 +485,6 @@ Andrew Solomon E<lt>andrew@geekuni.comE<gt>
 =head1 COPYRIGHT
 
 Copyright 2014- Andrew Solomon
-
-=head1 ACKNOWLEDGEMENT
-
-Built by Dist::Milla
 
 =head1 LICENSE
 
