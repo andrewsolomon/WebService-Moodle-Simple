@@ -168,5 +168,17 @@ opt password => (
   default => sub { die '--password [-p] - password required' },
 );
 
+subcmd (
+    cmd => 'get_user',
+    comment => 'Get data about username',
+);
+
+opt username => (
+  isa     => 'Str',
+  alias   => 'u',
+  comment => '--username [-u] - the user of the password',
+  default => sub { die '--username [-u] - username required' },
+);
+
 
 1;
