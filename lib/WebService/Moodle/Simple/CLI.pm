@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use OptArgs;
 
+# ABSTRACT: CLI for WebService::Moodle::Simple
+
 opt help => (
     isa     => 'Bool',
     comment => 'print a help message and exit',

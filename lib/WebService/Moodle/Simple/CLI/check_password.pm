@@ -6,6 +6,7 @@ use Data::Dump 'pp';
 use feature 'say';
 use WebService::Moodle::Simple;
 
+# ABSTRACT: moodle check_password method
 
 sub run {
   my $opts = shift;

@@ -13,6 +13,10 @@ use Ouch;
 use URI;
 use Sys::SigAction qw( timeout_call );
 
+
+# ABSTRACT: API client for Stripe
+
+
 my $REST_FORMAT = 'json';
 # https://moodle.org/mod/forum/discuss.php?d=340377
 my $STUDENT_ROLE_ID = 5;

@@ -1,0 +1,205 @@
+=pod
+
+=encoding utf-8
+
+=head1 NAME
+
+WebService::Moodle::Simple - API client for Stripe
+
+=head1 VERSION
+
+version 0.06
+
+=head1 SYNOPSIS
+
+=head2 CLI
+
+    ./bin/moodlews --help
+
+Example
+
+    $ ./bin/moodlews add_user -u freddy -f Fred -l Flintstone -e freddy09@example.com -o 0123456789abcdef -p ff1234 -d moodle.example.com -t local_wssetup
+
+    { id => 57, ok => 1, username => "freddy09" }
+
+=head2 API
+
+  use WebService::Moodle::Simple;
+
+  my $moodle = WebService::Moodle::Simple->new(
+    domain   => 'moodle.example.edu',
+    port     => 80,                  # default 443
+    timeout  => 100,                 # default 1000
+    scheme   => 'http',              # default 'https'
+    target   => 'example_webservice'
+    token    => '0123456789abcdef',
+  );
+
+=head1 DESCRIPTION
+
+WebService::Moodle::Simple is Client API and CLI for Moodle Web Services
+
+__THIS IS A DEVELOPMENT RELEASE. API MAY CHANGE WITHOUT NOTICE__.
+
+=head1 NAME
+
+WebService::Moodle::Simple - Client API and CLI for Moodle Web Services
+
+=head1 USAGE
+
+=head2 CLI
+
+Get instructions on CLI usage
+
+  moodlews
+
+=head2 Example - Login and Get Users
+
+Retrieve the user list using the token
+
+  moodlews get_users -o becac8d120119eb2a312a385644eb709 -d moodle.example.edu -t example_webservice
+
+=head2 Unit Tests
+
+  prove -rlv t
+
+=head3 Full Unit Tests
+
+    TEST_WSMS_SCHEME=https \
+    TEST_WSMS_PORT=443 \
+    TEST_WSMS_DOMAIN=moodle.example.com \
+    TEST_WSMS_TARGET=example_webservice \
+    TEST_WSMS_TOKEN=0123456789abcdef \
+    TEST_WSMS_COURSE=example-short-course-name \
+    prove -rlv t/
+
+__NOTE: Full unit tests write to Moodle Database - only run them against a test Moodle server__.
+
+=head2 Methods
+
+=over 4
+
+=item * add_user
+
+    $OBJ->add_user(
+        firstname => <str>,
+        lastname  => <str>,
+        email     => <str>,
+        username  => <str>,
+        password  => <str>,
+        token     => <str>,
+    );
+
+On failure, returns a hashref of the form
+
+    {
+        ok  => 0,
+        msg => <str>,
+    }
+
+or
+
+    {
+        ok       => 1,
+        id       => <int>,
+        username => <str>,
+    }
+
+=item * check_password
+
+    $OBJ->check_password(
+        username => <str>,
+        password => <str>,
+    )
+
+Returns
+
+     { msg => <str>, ok => <bool> }
+
+=item * set_password
+
+    $OBJ->set_password(
+        username => <str>,
+        password => <str>,
+    )
+
+Returns
+
+    { ok => <bool> }
+
+=item * get_user
+
+    $OBJ->get_user(
+        username => <str>,
+    )
+
+Returns
+
+    {
+        username  => <str>,
+        id        => <int>,
+        suspended => <JSON::PP::Boolean>,
+        ...
+    }
+
+=item * enrol_student
+
+    $OBJ->enrol_student(
+      username  => <str>,
+      course    => <str>,
+    )
+
+Returns
+
+    { ok => <bool>, msg => <str> }
+
+=item * get_course_id
+
+    $OBJ->get_course_id(
+        short_cname  => <str>,
+    )
+
+Returns an integer
+
+=item * suspend_user
+
+    $OBJ->suspend_user(
+        username => <str>,
+        suspend  => <bool default TRUE>
+    )
+
+Always returns undef
+
+If suspend is true/nonzero (which is the default) it kills the user's session
+and suspends their account preventing them from logging in. If suspend is false
+they are given permission to login.
+
+=back
+
+=head1 AUTHOR
+
+Andrew Solomon E<lt>andrew@geekuni.comE<gt>
+
+=head1 COPYRIGHT
+
+Copyright 2014- Andrew Solomon
+
+=head1 LICENSE
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=head1 SEE ALSO
+
+=head1 AUTHOR
+
+Andrew Solomon
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2014 by Copyright 2014- Andrew Solomon.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
