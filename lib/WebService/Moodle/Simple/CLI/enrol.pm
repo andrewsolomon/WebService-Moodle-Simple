@@ -13,7 +13,7 @@ sub run {
 
   my $resp = $moodle->enrol_student(
     username  => $opts->{username},
-    course   => $opts->{course},
+    course    => $opts->{course},
   );
 
   say pp($resp);
