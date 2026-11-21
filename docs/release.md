@@ -23,6 +23,9 @@ Uploading needs PAUSE credentials in `~/.pause`:
 
 ## Steps
 
+Release from an up-to-date `master`, after the release changes are merged:
+`[@Git]` tags and pushes whichever branch you are on.
+
 1. Add the release notes to `Changes` under `{{$NEXT}}`. Don't write the
    version or date: `[NextRelease]` fills them in.
 2. Set `$VERSION` in `lib/WebService/Moodle/Simple.pm`.
@@ -48,9 +51,15 @@ Uploading needs PAUSE credentials in `~/.pause`:
        dzil release
 
    This runs the tests in the built dist, asks for confirmation, and uploads
-   to PAUSE. Then `[@Git]` commits `Changes` (now with the version and date,
-   and a new `{{$NEXT}}`), tags the release `vx.yy`, and pushes the branch
-   and tag to `origin`.
+   to PAUSE. Then `[@Git]` tags the current commit `vx.yy` and pushes the
+   branch and tag to `origin`.
 
-6. Check the release on MetaCPAN once it's indexed: the abstract, the
+6. Commit and push `Changes`. `[NextRelease]` writes the version and date
+   into it, with a new `{{$NEXT}}` above, after `[@Git]` has committed, so
+   it is left modified:
+
+       git commit -m 'Changes for x.yy' Changes
+       git push
+
+7. Check the release on MetaCPAN once it's indexed: the abstract, the
    repository link and the POD.
