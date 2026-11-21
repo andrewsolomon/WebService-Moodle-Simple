@@ -48,3 +48,4 @@ Guidance for using Claude (or other coding agents) to edit WebService-Moodle-Sim
 - Avoid lengthy descriptions of trivial implementation details.
 - Update existing documentation when behaviour changes.
 - Do not create additional documentation files unless they serve a clear purpose.
+- Do not modify anything under .notes - only read it when instructed
