@@ -8,7 +8,7 @@ WebService::Moodle::Simple - API client for Stripe
 
 =head1 VERSION
 
-version 0.06
+version 0.07
 
 =head1 SYNOPSIS
 
@@ -38,6 +38,9 @@ Example
 =head1 DESCRIPTION
 
 WebService::Moodle::Simple is Client API and CLI for Moodle Web Services
+
+It works with Moodle 3.2 and Moodle 5.3. All requests are sent as POST form
+data, which Moodle 5.3 requires for C<check_password>.
 
 __THIS IS A DEVELOPMENT RELEASE. API MAY CHANGE WITHOUT NOTICE__.
 
@@ -168,7 +171,9 @@ Returns an integer
         suspend  => <bool default TRUE>
     )
 
-Always returns undef
+Returns
+
+    { ok => <bool> }
 
 If suspend is true/nonzero (which is the default) it kills the user's session
 and suspends their account preventing them from logging in. If suspend is false
