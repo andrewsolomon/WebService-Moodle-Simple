@@ -13,7 +13,7 @@ use URI;
 use Sys::SigAction qw( timeout_call );
 
 
-# ABSTRACT: API client for Stripe
+# ABSTRACT: Client API and CLI for Moodle Web Services
 
 
 my $REST_FORMAT = 'json';
@@ -343,10 +343,6 @@ __END__
 
 =encoding utf-8
 
-=head1 NAME
-
-WebService::Moodle::Simple - Client API and CLI for Moodle Web Services
-
 =head1 SYNOPSIS
 
 
@@ -521,20 +517,5 @@ and suspends their account preventing them from logging in. If suspend is false
 they are given permission to login.
 
 =back
-
-=head1 AUTHOR
-
-Andrew Solomon E<lt>andrew@geekuni.comE<gt>
-
-=head1 COPYRIGHT
-
-Copyright 2014- Andrew Solomon
-
-=head1 LICENSE
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.
-
-=head1 SEE ALSO
 
 =cut

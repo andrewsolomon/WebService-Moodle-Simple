@@ -1,135 +1,78 @@
-# NAME
+# Development
 
-WebService::Moodle::Simple - Client API and CLI for Moodle Web Services
+WebService::Moodle::Simple is a Perl client for Moodle Web Services, with a
+CLI (`bin/moodlews`). It supports Moodle 3.2 and Moodle 5.3.
 
-# SYNOPSIS
+The method reference is the POD in `lib/WebService/Moodle/Simple.pm`
+(`perldoc lib/WebService/Moodle/Simple.pm`). `README.pod` is generated from
+that POD at build time, so edit the module, not `README.pod`.
 
-## CLI
+## Layout
 
-    moodlews login        - login with your Moodle password and retrieve token
-    moodlews add_user     - Create a Moodle user account
-    moodlews get_users    - Get all users
-    moodlews enrol        - Enrol user into a course
-    moodlews set_password - Update a user account password
+- `lib/WebService/Moodle/Simple.pm`: the client. Every call is an HTTP POST
+  of form data, either to `webservice/rest/server.php` (REST functions) or to
+  `login/token.php` (`check_password`). Moodle 5.3 rejects credentials sent in
+  the query string.
+- `lib/WebService/Moodle/Simple/CLI.pm`: `moodlews` options and subcommands
+  (OptArgs). Each subcommand's `run` is in `lib/WebService/Moodle/Simple/CLI/`.
+- `t/`: tests (see below).
 
-## API
+## Setup
 
-    use WebService::Moodle::Simple;
+Install the runtime and test dependencies listed in `cpanfile`:
 
-    my $moodle = WebService::Moodle::Simple->new(
-      domain   =>  'moodle.example.edu',
-      target   =>  'example_webservice'
-    );
+    cpanm --installdeps .
 
-    my $rh_token = $moodle->login( username => 'admin', password => 'p4ssw0rd');
-
-# DESCRIPTION
-
-WebService::Moodle::Simple is Client API and CLI for Moodle Web Services
-
-\_\_THIS IS A DEVELOPMENT RELEASE. API MAY CHANGE WITHOUT NOTICE\_\_.
-
-# USAGE
+To build or release you also need the Dist::Zilla plugins (see
+[release.md](release.md)).
 
 ## CLI
 
-Get instructions on CLI usage
+    ./bin/moodlews --help
 
-    moodlews
+Commands: `add_user`, `get_user`, `set_password`, `check_password`,
+`suspend` (`--undo` to unsuspend), `enrol`. Every command needs the server
+(`-d`) and the web service token (`-o`). For example:
 
-## Example - Login and Get Users
+    ./bin/moodlews get_user -u freddy -d moodle.example.com -o 0123456789abcdef
 
-    moodlews login -u admin -d moodle.example.edu -p p4ssw0rd -t example_webservice
-
-Retrieve the user list using the token returned from the login command
-
-    moodlews get_users -o becac8d120119eb2a312a385644eb709 -d moodle.example.edu -t example_webservice
-
-## Unit Tests
+## Unit tests
 
     prove -rlv t
 
-### Full Unit Tests
+These need no Moodle server. `t/10_mock.t` replaces the HTTP layer with
+canned Moodle responses, so it checks what is sent (POST, form fields) and
+how responses from both Moodle 3.2 and 5.3 are interpreted. `t/20_live.t` is
+skipped unless the variables below are set.
 
-    TEST_WSMS_ADMIN_PWD=p4ssw0rd \
-    TEST_WSMS_DOMAIN=moodle.example.edu \
-    TEST_WSMS_TARGET=example_webservice prove -rlv t
+## Integration tests
 
-\_\_NOTE: Full unit tests write to Moodle Database - only run them against a test Moodle server\_\_.
+`t/20_live.t` runs every method against a real Moodle server. It creates a
+user (`test_<timestamp>`), changes its password, suspends and unsuspends it,
+and enrols it in a course.
 
-## Methods
+**It writes to the Moodle database. Only run it against a test Moodle
+server.**
 
-- _$OBJ_->login(
-  username => _str_,
-  password => _str_,
-)
+    TEST_WSMS_SCHEME=https \
+    TEST_WSMS_DOMAIN=moodle.example.com \
+    TEST_WSMS_PORT=443 \
+    TEST_WSMS_TARGET=example_webservice \
+    TEST_WSMS_TOKEN=0123456789abcdef \
+    TEST_WSMS_COURSE=example-short-course-name \
+    prove -lv t/20_live.t
 
-    Returns { msg => _str_, ok => _bool_, token => _str_ }
+The test server needs:
 
-- _$OBJ_->set\_password(
-  username => _str_,
-  password => _str_,
-  token    => _str_,
-)
-- _$OBJ_->add\_user(
-  firstname => _str_,
-  lastname  => _str_,
-  email     => _str_,
-  username  => _str_,
-  password  => _str_,
-  token     => _str_,
-)
-- _$OBJ_->get\_users(
-  token     => _str_,
-)
-- _$OBJ_->enrol\_student(
-  username  => _str_,
-  course    => _str_,
-  token     => _str_,
-)
-- _$OBJ_->get\_course\_id(
-  short\_cname  => _str_,
-  token        => _str_,
-)
-- _$OBJ_->get\_user(
-  token        => _str_,
-  username     => _str_,
-)
-- _$OBJ_->suspend\_user(
-  token    => _str_,
-  username => _str_,
-  suspend  => _bool default TRUE_
-)
+- Web services and the REST protocol enabled.
+- An external service (`TEST_WSMS_TARGET`) containing
+  `core_user_create_users`, `core_user_get_users_by_field`,
+  `core_user_update_users`, `core_course_get_courses` and
+  `enrol_manual_enrol_users`, with a token (`TEST_WSMS_TOKEN`) for a user
+  allowed to call them.
+- The mobile web service enabled (`enablemobilewebservice`), which
+  `check_password` uses through the `moodle_mobile_app` service.
+- A course with the short name `TEST_WSMS_COURSE` that uses manual
+  enrolment, and a student role with id 5 (hard-coded in `enrol_student`).
 
-    If suspend is true/nonzero (which is the default) it kills the user's session
-    and suspends their account preventing them from logging in. If suspend is false
-    they are given permission to login. NOTE: This will only work if the Moodle
-    server has had this patch (or its equivalent) applied:
-    https://github.com/fabiomsouto/moodle/compare/MOODLE\_22\_STABLE...MDL-31465-MOODLE\_22\_STABLE
-
-- _$OBJ_->raw\_api(
-    method => _moodle webservice method name_,
-    token  => _str_,
-    params => _hashref of method parameters_
-)
-
-    returns Moodle's response.
-
-# AUTHOR
-
-Andrew Solomon <andrew@geekuni.com>
-
-# COPYRIGHT
-
-Copyright 2014- Andrew Solomon
-
-# ACKNOWLEDGEMENT
-
-Built by Dist::Milla
-
-# LICENSE
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.
-
-# SEE ALSO
+Before a release, run it against every Moodle version the client supports.
