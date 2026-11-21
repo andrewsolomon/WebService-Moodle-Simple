@@ -4,11 +4,11 @@
 
 =head1 NAME
 
-WebService::Moodle::Simple - API client for Stripe
+WebService::Moodle::Simple - Client API and CLI for Moodle Web Services
 
 =head1 VERSION
 
-version 0.06
+version 0.07
 
 =head1 SYNOPSIS
 
@@ -39,11 +39,10 @@ Example
 
 WebService::Moodle::Simple is Client API and CLI for Moodle Web Services
 
+It works with Moodle 3.2 and Moodle 5.3. All requests are sent as POST form
+data, which Moodle 5.3 requires for C<check_password>.
+
 __THIS IS A DEVELOPMENT RELEASE. API MAY CHANGE WITHOUT NOTICE__.
-
-=head1 NAME
-
-WebService::Moodle::Simple - Client API and CLI for Moodle Web Services
 
 =head1 USAGE
 
@@ -168,7 +167,9 @@ Returns an integer
         suspend  => <bool default TRUE>
     )
 
-Always returns undef
+Returns
+
+    { ok => <bool> }
 
 If suspend is true/nonzero (which is the default) it kills the user's session
 and suspends their account preventing them from logging in. If suspend is false
@@ -178,26 +179,11 @@ they are given permission to login.
 
 =head1 AUTHOR
 
-Andrew Solomon E<lt>andrew@geekuni.comE<gt>
-
-=head1 COPYRIGHT
-
-Copyright 2014- Andrew Solomon
-
-=head1 LICENSE
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.
-
-=head1 SEE ALSO
-
-=head1 AUTHOR
-
-Andrew Solomon
+Andrew Solomon <andrew@geekuni.com>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2014 by Copyright 2014- Andrew Solomon.
+This software is copyright (c) 2014 by Andrew Solomon.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
